@@ -20,12 +20,8 @@ ENV/
 *.nav
 *.snm
 
-# Tailored CVs (Personal Data)
-# Using broad patterns for safety
-**/Soroush_Baghernezhad_CV_*
-**/*.pdf
-**/*.log
-**/*.aux
-
+# Workspace (Personal Data & Templates)
+cv_workspace/
+jobs_evaluated/
 # macOS
 .DS_Store

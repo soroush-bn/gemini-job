@@ -6,6 +6,15 @@ CRITICAL LATEX RULES:
 - Only modify the actual text content within the \\resumeItem{}, \\textbf{}, or summary sections.
 - If you add special characters (like &, %, $, _, #), you MUST escape them properly for LaTeX (e.g., \\&, \\%, \\$). Do not break the compilation!
 
+STRICT CONTENT CONSTRAINTS:
+- DO NOT CHANGE: Locations, Experience Dates, or Job Titles.
+- PROHIBITED: Adding random or fake experience, companies, or projects. Faking experience and projects is STRICTLY PROHIBITED.
+- ALLOWED:
+    - Adding/Updating a Professional Summary tailored to the JD.
+    - Adding/Updating Skills sections to include technologies mentioned in the JD (if relevant to the user's background).
+    - Enhancing/Exaggerating existing work experience bullet points to better align with the JD's requirements and keywords.
+    - Linking existing bullet points to specific JD requirements.
+
 Instructions:
 1. Use the `read_latex_cv` tool to retrieve the user's current base_cv.tex file.
 2. Review the job description summary provided by the Job Reader agent.

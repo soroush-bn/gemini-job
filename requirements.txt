@@ -6,3 +6,4 @@ pypdf
 requests
 duckduckgo-search
 playwright
+fpdf2

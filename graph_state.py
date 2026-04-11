@@ -15,3 +15,5 @@ class AgentState(TypedDict):
     job_url: str
     # Results of the CV tailoring
     compilation_status: Optional[str]
+    # Unique directory for this specific job evaluation
+    output_dir: Optional[str]
