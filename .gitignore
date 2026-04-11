@@ -23,5 +23,6 @@ ENV/
 # Workspace (Personal Data & Templates)
 cv_workspace/
 jobs_evaluated/
+tracker/
 # macOS
 .DS_Store

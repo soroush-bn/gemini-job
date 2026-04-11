@@ -23,6 +23,7 @@ from agents.resume_matcher.agent import get_resume_matcher_agent
 from agents.job_tracker.agent import get_job_tracker_agent
 from agents.ml_tailor.agent import get_ml_tailor_agent
 from agents.coverletter_tailor.agent import get_coverletter_tailor_agent
+from agents.job_tracker.skills.token_tracker import log_token_usage
 
 load_dotenv()
 
@@ -40,6 +41,15 @@ def job_reader_node(state: AgentState):
     agent = get_job_reader_agent()
     chat = agent.start_chat(enable_automatic_function_calling=True)
     response = chat.send_message(f"Analyze this URL: {state['job_url']}")
+    
+    # Log usage
+    if response.usage_metadata:
+        log_token_usage("Job Reader", {
+            "prompt_token_count": response.usage_metadata.prompt_token_count,
+            "candidates_token_count": response.usage_metadata.candidates_token_count,
+            "total_token_count": response.usage_metadata.total_token_count
+        })
+
     job_details = get_response_text(response)
     with open(os.path.join(state['output_dir'], "job_description.txt"), "w", encoding="utf-8") as f:
         f.write(job_details)
@@ -50,6 +60,15 @@ def company_researcher_node(state: AgentState):
     agent = get_company_researcher_agent()
     chat = agent.start_chat(enable_automatic_function_calling=True)
     response = chat.send_message(f"Research the company in these details: {state['job_details']}")
+    
+    # Log usage
+    if response.usage_metadata:
+        log_token_usage("Company Researcher", {
+            "prompt_token_count": response.usage_metadata.prompt_token_count,
+            "candidates_token_count": response.usage_metadata.candidates_token_count,
+            "total_token_count": response.usage_metadata.total_token_count
+        })
+
     company_info = get_response_text(response)
     with open(os.path.join(state['output_dir'], "company_info.txt"), "w", encoding="utf-8") as f:
         f.write(company_info)
@@ -67,6 +86,15 @@ def android_tailor_node(state: AgentState):
         except: pass
     prompt = f"Tailor androidCV.tex for {company_name}.\nJD: {state['job_details']}\nResearch: {state['company_info']}\nTarget: {state['output_dir']}"
     response = chat.send_message(prompt)
+
+    # Log usage
+    if response.usage_metadata:
+        log_token_usage("Android Tailor", {
+            "prompt_token_count": response.usage_metadata.prompt_token_count,
+            "candidates_token_count": response.usage_metadata.candidates_token_count,
+            "total_token_count": response.usage_metadata.total_token_count
+        })
+
     status = get_response_text(response)
     return {"compilation_status": status, "messages": ["Android Tailor: Done."]}
 
@@ -82,6 +110,15 @@ def ml_tailor_node(state: AgentState):
         except: pass
     prompt = f"Tailor {ML_TEMPLATE_NAME} for {company_name}.\nJD: {state['job_details']}\nResearch: {state['company_info']}\nTarget: {state['output_dir']}"
     response = chat.send_message(prompt)
+
+    # Log usage
+    if response.usage_metadata:
+        log_token_usage("ML Tailor", {
+            "prompt_token_count": response.usage_metadata.prompt_token_count,
+            "candidates_token_count": response.usage_metadata.candidates_token_count,
+            "total_token_count": response.usage_metadata.total_token_count
+        })
+
     status = get_response_text(response)
     return {"compilation_status": status, "messages": ["ML Tailor: Done."]}
 
@@ -98,6 +135,14 @@ def coverletter_tailor_node(state: AgentState):
     prompt = f"Tailor cover letter for {company_name}.\nJD: {state['job_details']}\nResearch: {state['company_info']}\nTarget: {state['output_dir']}"
     response = chat.send_message(prompt)
     
+    # Log usage
+    if response.usage_metadata:
+        log_token_usage("Cover Letter Tailor", {
+            "prompt_token_count": response.usage_metadata.prompt_token_count,
+            "candidates_token_count": response.usage_metadata.candidates_token_count,
+            "total_token_count": response.usage_metadata.total_token_count
+        })
+
     cover_letter_text = get_response_text(response)
 
     print(f"\n--- TAILORED COVER LETTER ---\n{cover_letter_text}\n---------------------------\n")
@@ -110,6 +155,15 @@ def job_tracker_node(state: AgentState):
     chat = agent.start_chat(enable_automatic_function_calling=True)
     prompt = f"Log this job: {state['job_details']} to {state['output_dir']}"
     response = chat.send_message(prompt)
+
+    # Log usage
+    if response.usage_metadata:
+        log_token_usage("Job Tracker", {
+            "prompt_token_count": response.usage_metadata.prompt_token_count,
+            "candidates_token_count": response.usage_metadata.candidates_token_count,
+            "total_token_count": response.usage_metadata.total_token_count
+        })
+
     return {"messages": ["Job Tracker: Updated."], "next_step": END}
 
 def route_to_tailor(state: AgentState):
