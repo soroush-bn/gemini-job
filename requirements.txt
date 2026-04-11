@@ -1,0 +1,8 @@
+langgraph
+google-generativeai
+python-dotenv
+trafilatura
+pypdf
+requests
+duckduckgo-search
+playwright

@@ -1,0 +1,17 @@
+from typing import TypedDict, Annotated, Sequence, Optional
+import operator
+
+class AgentState(TypedDict):
+    """The shared memory (State) for our multi-agent recruiter."""
+    # Conversation history
+    messages: Annotated[Sequence[str], operator.add]
+    # To track the next agent in line
+    next_step: str
+    # Data extracted about the job
+    job_details: Optional[str]
+    # Data researched about the company
+    company_info: Optional[str]
+    # The URL to process
+    job_url: str
+    # Results of the CV tailoring
+    compilation_status: Optional[str]
