@@ -1,6 +1,15 @@
 import os
 from fpdf import FPDF
-from config import CV_WORKSPACE, COVERLETTER_TEMPLATE
+from config import CV_WORKSPACE, COVERLETTER_TEMPLATE, FACTS_FILE
+
+def read_facts() -> str:
+    """Reads additional facts about the user for better tailoring."""
+    file_path = os.path.join(CV_WORKSPACE, FACTS_FILE)
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        return "No additional facts found."
 
 def read_coverletter_template() -> str:
     """Reads the base cover letter text template."""

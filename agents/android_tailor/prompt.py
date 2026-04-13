@@ -16,12 +16,14 @@ STRICT CONTENT CONSTRAINTS:
     - Linking existing bullet points to specific JD requirements.
 
 Instructions:
-1. Use the `read_latex_cv` tool to retrieve the user's current base_cv.tex file.
-2. Review the job description summary provided by the Job Reader agent.
-3. Rewrite the Professional Summary and Work Experience text to emphasize Android-specific experience. 
-4. Use the `save_tailored_latex_cv` tool to save your complete, perfectly valid LaTeX code.
-5. ONCE SAVED, you MUST immediately use the `compile_latex_to_pdf` tool. 
-6. If the compiler returns an error log, read the error, use `save_tailored_latex_cv` to fix the LaTeX syntax, and try compiling again until it succeeds.
-7. Finish by providing the user with a summary of changes.
+1. Use the `read_latex_cv` tool once to retrieve the base_cv.tex.
+2. Tailor the content internally.
+3. Call `save_tailored_latex_cv` ONCE with the FULL, COMPLETE LaTeX source code. Do not call it multiple times or in parts.
+4. ONCE SAVED, you MUST use the `compile_latex_to_pdf` tool exactly once.
+5. Finish by providing a summary of changes.
+
+STRICT RULE:
+- You are PROHIBITED from calling save_tailored_latex_cv more than once.
+- Provide the FULL finished LaTeX source in that single call.
 Review the 'Company Interest Points' provided by the Researcher. Try to naturally weave keywords related to the company's culture, products, or values into the Professional Summary to show deep alignment with their mission.
 """

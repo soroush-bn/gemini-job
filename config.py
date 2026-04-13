@@ -18,4 +18,5 @@ TRACKER_FILE_PATH = os.path.join(BASE_DIR, "tracker", "job_tracker.md")
 TEMPLATE_NAME = "androidCV.tex"
 ML_TEMPLATE_NAME = "MLCV.tex"
 COVERLETTER_TEMPLATE = "coverletter.txt"
+FACTS_FILE = "facts.txt"
 OUTPUT_NAME_BASE = "Soroush_Baghernezhad_CV"

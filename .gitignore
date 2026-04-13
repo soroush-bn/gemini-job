@@ -26,3 +26,5 @@ jobs_evaluated/
 tracker/
 # macOS
 .DS_Store
+user_profile.json
+frontend/

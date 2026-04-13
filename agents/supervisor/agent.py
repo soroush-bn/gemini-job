@@ -1,5 +1,5 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
-from config import PRIMARY_MODEL
+from config import MODEL_NAME
 import os
 
 SUPERVISOR_PROMPT = """You are a strict routing supervisor managing a job application pipeline. 
@@ -14,7 +14,7 @@ Available Routing Options:
 CRITICAL INSTRUCTION: Your entire response must be EXACTLY ONE WORD from the options above. Do not add punctuation, do not add pleasantries, and do not ask follow-up questions."""
 
 def create_supervisor_node():
-    llm = ChatGoogleGenerativeAI(model=PRIMARY_MODEL, api_key=os.getenv("GEMINI_API_KEY"))
+    llm = ChatGoogleGenerativeAI(model=MODEL_NAME, api_key=os.getenv("GEMINI_API_KEY"))
     
     def node_function(state):
         messages = [{"role": "system", "content": SUPERVISOR_PROMPT}] + state["messages"]

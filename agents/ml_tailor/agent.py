@@ -1,7 +1,7 @@
 import google.generativeai as genai
 from config import GEMINI_API_KEY, MATCH_MODEL_NAME
 from .prompt import ML_TAILOR_PROMPT
-from agents.resume_matcher.skills.latex_tools import read_latex_template, save_and_compile_latex
+from agents.resume_matcher.skills.latex_tools import read_latex_template, save_and_compile_latex, read_facts
 
 def get_ml_tailor_agent():
     """Initializes the ML Tailor agent with Gemini."""
@@ -12,7 +12,7 @@ def get_ml_tailor_agent():
     
     model = genai.GenerativeModel(
         model_name=MATCH_MODEL_NAME,
-        tools=[read_latex_template, save_and_compile_latex],
+        tools=[read_latex_template, save_and_compile_latex, read_facts],
         system_instruction=ML_TAILOR_PROMPT
     )
     

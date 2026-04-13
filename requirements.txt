@@ -6,4 +6,10 @@ pypdf
 requests
 duckduckgo-search
 playwright
+selenium
+webdriver-manager
 fpdf2
+fastapi
+uvicorn
+websockets
+python-multipart

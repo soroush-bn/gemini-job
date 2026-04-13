@@ -17,3 +17,5 @@ class AgentState(TypedDict):
     compilation_status: Optional[str]
     # Unique directory for this specific job evaluation
     output_dir: Optional[str]
+    # The timestamp of the run
+    timestamp: Optional[str]

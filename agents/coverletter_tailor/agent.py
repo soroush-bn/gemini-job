@@ -1,7 +1,7 @@
 import google.generativeai as genai
 from config import GEMINI_API_KEY, MATCH_MODEL_NAME
 from .prompt import COVERLETTER_TAILOR_PROMPT
-from .skills.coverletter_tools import read_coverletter_template, save_coverletter_outputs
+from .skills.coverletter_tools import read_coverletter_template, save_coverletter_outputs, read_facts
 
 def get_coverletter_tailor_agent():
     """Initializes the Cover Letter Tailor agent with Gemini."""
@@ -12,7 +12,7 @@ def get_coverletter_tailor_agent():
     
     model = genai.GenerativeModel(
         model_name=MATCH_MODEL_NAME,
-        tools=[read_coverletter_template, save_coverletter_outputs],
+        tools=[read_coverletter_template, save_coverletter_outputs, read_facts],
         system_instruction=COVERLETTER_TAILOR_PROMPT
     )
     

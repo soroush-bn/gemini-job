@@ -1,8 +1,11 @@
+import base64
 from playwright.sync_api import sync_playwright
 import trafilatura
+from utils.messenger import pipeline_messenger
 
 def fetch_web_content(url: str) -> str:
     """Fetches text content using a headless browser (Chromium) to bypass scraping protection."""
+    pipeline_messenger.send("agent_activity", {"stage": "Job Reader", "activity": f"Fetching content from: {url}"})
     try:
         with sync_playwright() as p:
             # Launch headless browser
@@ -11,11 +14,16 @@ def fetch_web_content(url: str) -> str:
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
             )
             page = context.new_page()
-            
+
             # Go to the URL and wait for the page to load
             print(f"DEBUG: Navigating to {url}...")
             response = page.goto(url, wait_until="domcontentloaded", timeout=60000)
-            
+
+            # Take a screenshot
+            screenshot = page.screenshot(type='jpeg', quality=50)
+            encoded = base64.b64encode(screenshot).decode('utf-8')
+            pipeline_messenger.send("screenshot", {"data": encoded})
+
             if response is None or response.status != 200:
                 status = response.status if response else "No Response"
                 browser.close()
@@ -34,6 +42,7 @@ def fetch_web_content(url: str) -> str:
             if text is None:
                 return f"Error: Could not extract clean text content from the rendered page at {url}."
             
+            pipeline_messenger.send("agent_activity", {"stage": "Job Reader", "activity": f"Extracted {len(text)} characters from {url}"})
             return text
             
     except Exception as e:

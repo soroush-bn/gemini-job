@@ -1,7 +1,16 @@
 import os
 import subprocess
 import shutil
-from config import CV_WORKSPACE, TEMPLATE_NAME, OUTPUT_NAME_BASE
+from config import CV_WORKSPACE, TEMPLATE_NAME, OUTPUT_NAME_BASE, FACTS_FILE
+
+def read_facts() -> str:
+    """Reads additional facts about the user for better tailoring."""
+    file_path = os.path.join(CV_WORKSPACE, FACTS_FILE)
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        return "No additional facts found."
 
 def read_latex_template(template_name: str = TEMPLATE_NAME) -> str:
     """Reads the LaTeX template from the cv_workspace."""
