@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { width: 250px; padding: 15px; font-family: sans-serif; background: #0f172a; color: white; }
+    h2 { font-size: 16px; color: #4ade80; margin-top: 0; }
+    .status { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 15px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; }
+    .dot.connected { background: #22c55e; }
+    button { 
+      width: 100%; padding: 10px; background: #2563eb; color: white; border: none; 
+      border-radius: 6px; cursor: pointer; font-weight: bold;
+    }
+    button:hover { background: #1d4ed8; }
+    .note { font-size: 11px; color: #94a3b8; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Gemini Job Agent</h2>
+  <div class="status">
+    <div id="status-dot" class="dot"></div>
+    <span id="status-text">Disconnected from Backend</span>
+  </div>
+  <button id="reconnect-btn">Check Connection</button>
+  <p class="note">Make sure <b>python api.py</b> is running at localhost:8000</p>
+  <script src="popup.js"></script>
+</body>
+</html>
