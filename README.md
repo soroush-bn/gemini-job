@@ -1,6 +1,6 @@
 ![Gemini Job Agent](tenor.gif)
 
-# 🤖 Gemini Job Agent
+# Gemini Job Agent
 
 
 An automated pipeline that searches for jobs, researches companies, and generates tailored CVs and cover letters using Google Gemini AI.
@@ -83,7 +83,7 @@ The extension allows you to trigger the pipeline directly from LinkedIn, Indeed,
 1. Ensure `python api.py` is running.
 2. Navigate to any job description page.
 3. Click the ** Run Pipeline** floating button in the bottom-right.
-4. Once you are on the application form page, click **📝 Auto-Fill** to instantly populate the fields with your profile data.
+4. Once you are on the application form page, click **Auto-Fill** to instantly populate the fields with your profile data.
 5. Click the Gemini icon in your toolbar to check the connection status.
 
 ---
