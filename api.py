@@ -13,9 +13,30 @@ from agents.job_finder.agent import get_job_finder_agent
 from utils.messenger import pipeline_messenger
 from config import JOBS_EVALUATED_DIR
 
-app = FastAPI()
+from contextlib import asynccontextmanager
 
-# Enable CORS for React frontend
+# Store logs in memory for polling
+log_buffer = []
+
+async def global_log_listener():
+    """Continuously listens for updates from the pipeline and buffers them for polling."""
+    global log_buffer
+    async for update in pipeline_messenger.get_updates():
+        log_buffer.append(update)
+        # Keep buffer size manageable
+        if len(log_buffer) > 100:
+            log_buffer.pop(0)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Pass the running event loop to the messenger
+    pipeline_messenger.set_loop(asyncio.get_running_loop())
+    # Start the global listener
+    asyncio.create_task(global_log_listener())
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,17 +44,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.on_event("startup")
-async def startup_event():
-    # Pass the running event loop to the messenger
-    pipeline_messenger.set_loop(asyncio.get_running_loop())
-
 @app.get("/jobs")
 def get_evaluated_jobs():
     """Returns a list of folders in jobs_evaluated."""
     if not os.path.exists(JOBS_EVALUATED_DIR):
         return []
     return sorted(os.listdir(JOBS_EVALUATED_DIR), reverse=True)
+
+@app.get("/profile")
+def get_user_profile():
+    """Returns the content of user_profile.json."""
+    profile_path = os.path.join(os.path.dirname(__file__), "user_profile.json")
+    if not os.path.exists(profile_path):
+        return {"error": "Profile not found"}
+    with open(profile_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+@app.get("/logs")
+async def get_logs():
+    """Returns all logs in the buffer and clears it."""
+    global log_buffer
+    logs = list(log_buffer)
+    log_buffer = []
+    return logs
+
+class ProcessUrlRequest(BaseModel):
+    url: str
+
+@app.post("/process_url")
+async def process_url_endpoint(request: ProcessUrlRequest):
+    """Triggers the job application pipeline via HTTP."""
+    thread = threading.Thread(
+        target=run_job_application_pipeline,
+        args=(request.url,)
+    )
+    thread.start()
+    return {"status": "Pipeline started", "url": request.url}
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -43,6 +89,8 @@ async def websocket_endpoint(websocket: WebSocket):
         """Dedicated task to stream updates from the messenger to the client."""
         try:
             async for update in pipeline_messenger.get_updates():
+                # Add to polling buffer too
+                log_buffer.append(update)
                 await websocket.send_text(update)
         except Exception as e:
             print(f"WS Send Error: {e}")
@@ -117,4 +165,4 @@ def run_pipeline_flow(role, country, work_type):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8088)

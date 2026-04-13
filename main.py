@@ -4,6 +4,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 import os
 import sys
 import json
+import re
 from datetime import datetime
 
 # Setup Paths
@@ -189,7 +190,7 @@ def company_researcher_node(state: AgentState):
     pipeline_messenger.send("agent_activity", {"stage": "Company Researcher", "activity": company_info})
     with open(os.path.join(state['output_dir'], "company_info.txt"), "w", encoding="utf-8") as f:
         f.write(company_info)
-    return {"company_info": company_info, "messages": ["Company Researcher: Gathered research."]}
+    return {"company_info": company_info, "output_dir": state['output_dir'], "messages": ["Company Researcher: Gathered research."]}
 
 def android_tailor_node(state: AgentState):
     msg = "--- Android Tailor: Tailoring AndroidCV ---"
@@ -217,7 +218,7 @@ def android_tailor_node(state: AgentState):
 
     status = get_response_text(response)
     pipeline_messenger.send("agent_activity", {"stage": "CV Tailor (Android)", "activity": status})
-    return {"compilation_status": status, "messages": ["Android Tailor: Done."]}
+    return {"compilation_status": status, "output_dir": state['output_dir'], "messages": ["Android Tailor: Done."]}
 
 def ml_tailor_node(state: AgentState):
     msg = "--- ML Tailor: Tailoring MLCV ---"
@@ -245,7 +246,7 @@ def ml_tailor_node(state: AgentState):
 
     status = get_response_text(response)
     pipeline_messenger.send("agent_activity", {"stage": "CV Tailor (ML)", "activity": status})
-    return {"compilation_status": status, "messages": ["ML Tailor: Done."]}
+    return {"compilation_status": status, "output_dir": state['output_dir'], "messages": ["ML Tailor: Done."]}
 
 def coverletter_tailor_node(state: AgentState):
     msg = "--- Cover Letter Tailor: Tailoring Cover Letter ---"
@@ -294,7 +295,7 @@ def coverletter_tailor_node(state: AgentState):
     print(tailored_msg)
     pipeline_messenger.send("log", tailored_msg)
     
-    return {"messages": ["Cover Letter Tailor: Generated .txt and .pdf."]}
+    return {"messages": ["Cover Letter Tailor: Generated .txt and .pdf."], "output_dir": state['output_dir']}
 
 def job_tracker_node(state: AgentState):
     msg = "--- Job Tracker: Updating Record ---"
@@ -326,7 +327,7 @@ def job_tracker_node(state: AgentState):
         }, model_type="flash-lite")
 
     pipeline_messenger.send("agent_activity", {"stage": "Complete", "activity": "Job evaluation finished successfully."})
-    return {"messages": ["Job Tracker: Update tool called."], "next_step": END}
+    return {"messages": ["Job Tracker: Update tool called."], "next_step": END, "output_dir": state['output_dir']}
 
 def route_to_tailor(state: AgentState):
     details = state['job_details'].lower()
@@ -363,7 +364,32 @@ workflow.add_edge("job_tracker", END)
 
 app = workflow.compile()
 
+def find_existing_job(url: str):
+    """Checks all evaluated jobs to see if this URL was already processed."""
+    if not os.path.exists(JOBS_EVALUATED_DIR):
+        return None
+    
+    for folder in os.listdir(JOBS_EVALUATED_DIR):
+        folder_path = os.path.join(JOBS_EVALUATED_DIR, folder)
+        jd_path = os.path.join(folder_path, "job_description.txt")
+        if os.path.exists(jd_path):
+            with open(jd_path, "r", encoding="utf-8") as f:
+                content = f.read()
+                # Simple check for the URL in the JD file
+                if url in content:
+                    return folder_path
+    return None
+
 def run_job_application_pipeline(url: str):
+    # Check if job already exists
+    existing_path = find_existing_job(url)
+    if existing_path:
+        msg = f"SKIPPING: Job already processed in {os.path.basename(existing_path)}"
+        print(f"\n[SYSTEM] {msg}")
+        pipeline_messenger.send("log", msg)
+        pipeline_messenger.send("agent_activity", {"stage": "Complete", "activity": msg})
+        return
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     # Initial temporary directory
     output_dir = os.path.join(JOBS_EVALUATED_DIR, f"temp_{timestamp}")
