@@ -5,7 +5,7 @@ class AgentState(TypedDict):
     """The shared memory (State) for our multi-agent recruiter."""
     # Conversation history
     messages: Annotated[Sequence[str], operator.add]
-    # To track the next agent in line
+    # To track the next agent in line (used by Supervisor)
     next_step: str
     # Data extracted about the job
     job_details: Optional[str]
@@ -15,6 +15,8 @@ class AgentState(TypedDict):
     job_url: str
     # Results of the CV tailoring
     compilation_status: Optional[str]
+    # Result of the cover letter tailoring
+    cl_status: Optional[str]
     # Unique directory for this specific job evaluation
     output_dir: Optional[str]
     # The timestamp of the run

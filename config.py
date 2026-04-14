@@ -9,7 +9,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Shared Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 MODEL_NAME = "gemini-2.5-flash-lite" 
-MATCH_MODEL_NAME = "gemini-3.1-flash-lite-preview" # Pro is much better at LaTeX and code manipulation
+MATCH_MODEL_NAME = "gemini-2.5-flash" # Pro is much better at LaTeX and code manipulation
 
 # Workspace Paths
 CV_WORKSPACE = os.path.join(BASE_DIR, "cv_workspace")

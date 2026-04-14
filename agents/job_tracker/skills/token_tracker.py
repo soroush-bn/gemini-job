@@ -2,7 +2,7 @@ import os
 from config import TRACKER_FILE_PATH
 from utils.messenger import pipeline_messenger
 
-def log_token_usage(node_name: str, usage_metadata: dict, model_type: str = "flash-lite"):
+def log_token_usage(node_name: str, usage_metadata, model_type: str = "flash-lite"):
     """Logs token usage and estimated cost for a specific agent node to tracker/token_log.md."""
     tracker_dir = os.path.dirname(TRACKER_FILE_PATH)
     log_file = os.path.join(tracker_dir, "token_log.md")
@@ -10,9 +10,15 @@ def log_token_usage(node_name: str, usage_metadata: dict, model_type: str = "fla
     # Ensure directory exists
     os.makedirs(tracker_dir, exist_ok=True)
     
-    prompt_tokens = usage_metadata.get('prompt_token_count', 0)
-    candidates_tokens = usage_metadata.get('candidates_token_count', 0)
-    total_tokens = usage_metadata.get('total_token_count', 0)
+    if isinstance(usage_metadata, dict):
+        prompt_tokens = usage_metadata.get('prompt_token_count', 0)
+        candidates_tokens = usage_metadata.get('candidates_token_count', 0)
+        total_tokens = usage_metadata.get('total_token_count', 0)
+    else:
+        # Handle UsageMetadata object from proto
+        prompt_tokens = getattr(usage_metadata, 'prompt_token_count', 0)
+        candidates_tokens = getattr(usage_metadata, 'candidates_token_count', 0)
+        total_tokens = getattr(usage_metadata, 'total_token_count', 0)
     
     # Pricing (Paid Tier USD per 1M tokens)
     if "pro" in model_type.lower():
