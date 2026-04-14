@@ -1,46 +1,43 @@
 import os
+import shutil
 import subprocess
-from langchain_core.tools import tool
+from config import CV_WORKSPACE, OUTPUT_NAME_BASE
 
-WORKSPACE = "cv_workspace"
-
-@tool
-def read_latex_cv() -> str:
-    """Reads the user's base LaTeX CV from the cv_workspace directory."""
-    filepath = os.path.join(WORKSPACE, "androidCV.tex")
+def save_and_compile_latex(latex_content: str, company_name: str, target_dir: str) -> str:
+    """
+    Saves the full LaTeX content to a file and compiles it using pdflatex.
+    """
+    # Force absolute path
+    target_dir = os.path.abspath(target_dir)
+    
+    clean_company = "".join(x for x in company_name if x.isalnum() or x in " _-").strip().replace(" ", "_")
+    output_filename = f"{OUTPUT_NAME_BASE}_{clean_company}"
+    tex_file = os.path.join(target_dir, f"{output_filename}.tex")
+    
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            return f.read()
-    except FileNotFoundError:
-        return f"Error: androidCV.tex not found in {WORKSPACE}/"
+        # Save the full LaTeX content
+        with open(tex_file, "w", encoding="utf-8") as f:
+            f.write(latex_content)
 
-@tool
-def save_tailored_latex_cv(content: str) -> str:
-    """Saves the newly tailored CV to a .tex file inside cv_workspace."""
-    filepath = os.path.join(WORKSPACE, "tailored_android_cv.tex")
-    try:
-        with open(filepath, "w", encoding="utf-8") as f:
-            f.write(content)
-        return "Successfully saved tailored_android_cv.tex. You can now compile it."
-    except Exception as e:
-        return f"Failed to save LaTeX CV: {str(e)}"
+        # Copy assets (.cls, fonts, etc.) from workspace to target dir
+        if os.path.exists(CV_WORKSPACE):
+            for item in os.listdir(CV_WORKSPACE):
+                if item.endswith(".cls") or item.endswith(".png") or item.endswith(".jpg"):
+                    shutil.copy2(os.path.join(CV_WORKSPACE, item), target_dir)
 
-@tool
-def compile_latex_to_pdf() -> str:
-    """Compiles the tailored_android_cv.tex file into a PDF using pdflatex."""
-    try:
-        # We run the command inside the WORKSPACE so it finds altacv.cls
+        # Compile once (sufficient for most CVs)
         result = subprocess.run(
-            ["pdflatex", "-interaction=nonstopmode", "tailored_android_cv.tex"],
-            cwd=WORKSPACE,
+            ["pdflatex", "-interaction=nonstopmode", f"{output_filename}.tex"],
+            cwd=target_dir,
             capture_output=True,
-            text=True,
-            check=True
+            text=True
         )
-        return "SUCCESS! The PDF has been successfully compiled and is ready in the cv_workspace folder."
-    except subprocess.CalledProcessError as e:
-        # If compilation fails, return the tail end of the LaTeX log so the agent can see the syntax error
-        error_log = e.stdout[-1500:] if e.stdout else "Unknown compilation error."
-        return f"Compilation FAILED. Here is the LaTeX error log:\n{error_log}\n\nPlease fix the syntax error in the .tex file and try saving/compiling again."
-    except FileNotFoundError:
-        return "Error: pdflatex is not recognized as a command. Is it installed and in your system PATH?"
+        
+        pdf_path = os.path.join(target_dir, f"{output_filename}.pdf")
+        if os.path.exists(pdf_path):
+            return f"Success! CV compiled to {pdf_path}"
+        else:
+            return f"LaTeX Error: {result.stdout[-500:]}"
+
+    except Exception as e:
+        return f"Error during save/compile: {str(e)}"

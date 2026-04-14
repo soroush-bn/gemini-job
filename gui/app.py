@@ -17,7 +17,6 @@ if PROJECT_ROOT not in sys.path:
     sys.path.append(PROJECT_ROOT)
 
 from main import run_job_application_pipeline, run_job_finder
-from agents.apply_agent.agent import run_apply_pipeline, get_apply_agent, get_ready_jobs
 from utils.messenger import pipeline_messenger
 
 # Constants for Dropdowns
@@ -76,8 +75,7 @@ class JobAgentGUI:
                                 role = parts[3]
                                 status = parts[6]
                                 if company and role:
-                                    # Add '🚀 APPLY' to action column
-                                    self.job_tree.insert('', tk.END, values=(company, role, status, "🚀 APPLY"))
+                                    self.job_tree.insert('', tk.END, values=(company, role, status))
         except Exception as e:
             print(f"Error loading existing jobs: {e}")
 
@@ -90,6 +88,18 @@ class JobAgentGUI:
         self.left_frame = ttk.Frame(self.paned_window, padding="5")
         self.paned_window.add(self.left_frame, weight=1)
         
+        # Load and display Icon
+        try:
+            icon_path = os.path.join(PROJECT_ROOT, "tenor.gif")
+            if os.path.exists(icon_path):
+                img = Image.open(icon_path)
+                img = img.resize((150, 150), Image.Resampling.LANCZOS)
+                self.gui_icon = ImageTk.PhotoImage(img)
+                icon_label = ttk.Label(self.left_frame, image=self.gui_icon)
+                icon_label.pack(pady=10)
+        except Exception as e:
+            print(f"Error loading GUI icon: {e}")
+
         ttk.Label(self.left_frame, text="Token Tracker", font=('Helvetica', 12, 'bold')).pack(pady=5)
         
         columns = ('node', 'tokens', 'cost')
@@ -138,7 +148,6 @@ class JobAgentGUI:
         btn_frame = ttk.Frame(ctrl_frame)
         btn_frame.pack(side=tk.TOP, fill=tk.X)
         ttk.Button(btn_frame, text="1. Find Jobs", command=self.start_job_finder).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
-        ttk.Button(btn_frame, text="Apply to All Ready", command=self.start_apply_agent).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
         ttk.Button(btn_frame, text="Refresh Tracker", command=self.load_existing_jobs).pack(side=tk.LEFT, padx=2)
         
         url_frame = ttk.Frame(ctrl_frame)
@@ -175,92 +184,15 @@ class JobAgentGUI:
         ttk.Label(tracker_header, text="Job Tracker", font=('Helvetica', 12, 'bold')).pack(side=tk.LEFT)
         ttk.Button(tracker_header, text="Refresh", command=self.load_existing_jobs, width=8).pack(side=tk.RIGHT)
         
-        job_columns = ('company', 'role', 'status', 'action')
+        job_columns = ('company', 'role', 'status')
         self.job_tree = ttk.Treeview(self.right_frame, columns=job_columns, show='headings', height=15)
         self.job_tree.heading('company', text='Company')
         self.job_tree.heading('role', text='Role')
         self.job_tree.heading('status', text='Status')
-        self.job_tree.heading('action', text='Action')
         self.job_tree.column('company', width=100)
         self.job_tree.column('role', width=100)
         self.job_tree.column('status', width=80)
-        self.job_tree.column('action', width=80, anchor=tk.CENTER)
         self.job_tree.pack(fill=tk.BOTH, expand=True)
-        
-        # Bind single click to detect "Apply" link click
-        self.job_tree.bind("<ButtonRelease-1>", self.on_tree_click)
-        
-        # Right click menu (keep as fallback)
-        self.context_menu = tk.Menu(self.root, tearoff=0)
-        self.context_menu.add_command(label="Apply to this Job", command=self.apply_selected_job)
-        self.job_tree.bind("<Button-3>", self.on_tree_right_click)
-
-    def on_tree_click(self, event):
-        region = self.job_tree.identify_region(event.x, event.y)
-        if region == "cell":
-            column = self.job_tree.identify_column(event.x)
-            # Column #4 is 'action'
-            if column == "#4":
-                item = self.job_tree.identify_row(event.y)
-                if item:
-                    self.job_tree.selection_set(item)
-                    self.apply_selected_job()
-
-    def on_tree_right_click(self, event):
-        item = self.job_tree.identify_row(event.y)
-        if item:
-            self.job_tree.selection_set(item)
-            self.context_menu.post(event.x_root, event.y_root)
-
-    def apply_selected_job(self):
-        selected = self.job_tree.selection()
-        if not selected: return
-        item_data = self.job_tree.item(selected[0])['values']
-        company_name = str(item_data[0])
-        threading.Thread(target=self.run_single_apply_thread, args=(company_name,), daemon=True).start()
-
-    def run_single_apply_thread(self, company_name):
-        self.log(f">>> Starting Apply Agent for: {company_name}")
-        try:
-            ready_jobs = get_ready_jobs()
-            # Log all companies for debugging
-            # print(f"DEBUG: Ready jobs companies: {[j['company'] for j in ready_jobs]}")
-            
-            target_job = next((j for j in ready_jobs if j['company'].strip().lower() == company_name.strip().lower()), None)
-            
-            if not target_job:
-                self.log(f"Error: Job at {company_name} not found or status is not 'ready to submit'.")
-                return
-
-            import json
-            with open("user_profile.json", "r", encoding="utf-8") as f:
-                user_info = json.load(f)
-            
-            jd_path = os.path.join(target_job['path'], "job_description.txt")
-            with open(jd_path, "r", encoding="utf-8") as f:
-                jd_text = f.read()
-            
-            cv_path = None
-            for f_name in os.listdir(target_job['path']):
-                if f_name.endswith(".pdf") and ("CV" in f_name or "Resume" in f_name or "tailored" in f_name):
-                    cv_path = os.path.join(target_job['path'], f_name)
-                    break
-            
-            cl_path = None
-            for f_name in os.listdir(target_job['path']):
-                if f_name.endswith(".pdf") and ("Cover" in f_name or "Letter" in f_name):
-                    cl_path = os.path.join(target_job['path'], f_name)
-                    break
-
-            agent = get_apply_agent()
-            chat = agent.start_chat(enable_automatic_function_calling=True)
-            prompt = f"Apply for this job:\nCompany: {target_job['company']}\nRole: {target_job['role']}\nJD Context: {jd_text[:1000]}...\nCV Path: {cv_path}\nCover Letter Path: {cl_path}\nUser Info: {json.dumps(user_info)}"
-            chat.send_message(prompt)
-            
-            self.log(f"Finished applying for {company_name}")
-            self.root.after(2000, self.load_existing_jobs)
-        except Exception as e:
-            self.log(f"Error applying to {company_name}: {e}")
 
     def custom_send(self, event_type, data):
         self.log_queue.put({"type": event_type, "data": data})
@@ -315,7 +247,7 @@ class JobAgentGUI:
         self.cost_label.config(text=f"Total Cost: ${self.total_cost:.6f}")
 
     def update_job_tracker(self, data):
-        self.job_tree.insert('', tk.END, values=(data['company'], data['role'], data['status'], "🚀 APPLY"))
+        self.job_tree.insert('', tk.END, values=(data['company'], data['role'], data['status']))
 
     def gui_input(self, prompt):
         result = [None]
@@ -363,16 +295,6 @@ class JobAgentGUI:
             self.root.after(2000, self.load_existing_jobs)
         except Exception as e:
             self.log(f"Error in Pipeline: {e}")
-
-    def start_apply_agent(self):
-        threading.Thread(target=self.run_apply_agent_thread, daemon=True).start()
-
-    def run_apply_agent_thread(self):
-        try:
-            run_apply_pipeline()
-            self.root.after(2000, self.load_existing_jobs)
-        except Exception as e:
-            self.log(f"Error in Apply Agent: {e}")
 
 def main():
     root = tk.Tk()

@@ -26,7 +26,8 @@ def log_token_usage(node_name: str, usage_metadata: dict, model_type: str = "fla
     usd_to_cad = 1.40
     input_cost_usd = (prompt_tokens / 1_000_000) * input_price
     output_cost_usd = (candidates_tokens / 1_000_000) * output_price
-    total_cost_cad = (input_cost_usd + output_cost_usd) * usd_to_cad
+    # Multiply by 3 as requested by the user for the current model setup
+    total_cost_cad = (input_cost_usd + output_cost_usd) * usd_to_cad * 3
     
     # Broadcast to GUI
     pipeline_messenger.send("metrics", {
@@ -45,13 +46,14 @@ def log_token_usage(node_name: str, usage_metadata: dict, model_type: str = "fla
         with open(log_file, "a", encoding="utf-8") as f:
             if not file_exists:
                 f.write("# Token Usage and Cost Log\n\n")
-                f.write("**Pricing (USD per 1M tokens):**\n")
+                f.write("**Pricing (USD per 1M tokens) [x3 Multiplier Applied]:**\n")
                 f.write("- **Pro:** Input $1.25, Output $10.00\n")
                 f.write("- **Flash-Lite:** Input $0.10, Output $0.40\n")
                 f.write(f"\n**FX Rate:** {usd_to_cad} CAD/USD\n\n")
                 f.write(headers)
                 f.write(separator)
             f.write(new_row)
-        return f"Logged tokens and cost for {node_name}."
+        return total_cost_cad
     except Exception as e:
-        return f"Error logging tokens: {str(e)}"
+        print(f"Error logging tokens: {str(e)}")
+        return 0.0

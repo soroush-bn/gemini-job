@@ -1,19 +1,19 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langgraph.prebuilt import create_react_agent
-from .skills.cv_tools import read_latex_cv, save_tailored_latex_cv, compile_latex_to_pdf
-from .prompt import SYSTEM_PROMPT
-from config import MODEL_NAME
-import os
+import google.generativeai as genai
+from config import GEMINI_API_KEY, MODEL_NAME
+from .prompt import RESUME_MATCHER_PROMPT
+from .skills.cv_tools import save_and_compile_latex
 
-def create_android_tailor_node():
-    llm = ChatGoogleGenerativeAI(model=MODEL_NAME, api_key=os.getenv("GEMINI_API_KEY"))
+def get_android_tailor_agent():
+    """Initializes the Android Tailor agent with full LaTeX saving skill."""
+    if not GEMINI_API_KEY:
+        raise ValueError("GEMINI_API_KEY not found in configuration.")
     
-    # Give it all three tools
-    tool_agent = create_react_agent(llm, tools=[read_latex_cv, save_tailored_latex_cv, compile_latex_to_pdf], prompt=SYSTEM_PROMPT)
+    genai.configure(api_key=GEMINI_API_KEY)
     
-    def node_function(state):
-        result = tool_agent.invoke({"messages": state["messages"]})
-        new_messages = result["messages"][len(state["messages"]):]
-        return {"messages": new_messages}
-        
-    return node_function
+    model = genai.GenerativeModel(
+        model_name=MODEL_NAME, 
+        tools=[save_and_compile_latex],
+        system_instruction=RESUME_MATCHER_PROMPT
+    )
+    
+    return model

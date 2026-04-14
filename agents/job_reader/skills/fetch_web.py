@@ -1,18 +1,30 @@
 import base64
+import os
 from playwright.sync_api import sync_playwright
 import trafilatura
 from utils.messenger import pipeline_messenger
 
 def fetch_web_content(url: str) -> str:
-    """Fetches text content using a headless browser (Chromium) to bypass scraping protection."""
+    """Fetches text content using a headless browser (Chromium). Uses saved session for LinkedIn if available."""
     pipeline_messenger.send("agent_activity", {"stage": "Job Reader", "activity": f"Fetching content from: {url}"})
     try:
         with sync_playwright() as p:
             # Launch headless browser
             browser = p.chromium.launch(headless=True)
-            context = browser.new_context(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
-            )
+            
+            # Setup context with session if it's LinkedIn and session file exists
+            session_file = "linkedin_session.json"
+            if "linkedin.com" in url.lower() and os.path.exists(session_file):
+                print(f"DEBUG: Using LinkedIn session from {session_file}...")
+                context = browser.new_context(
+                    storage_state=session_file,
+                    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+                )
+            else:
+                context = browser.new_context(
+                    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+                )
+                
             page = context.new_page()
 
             # Go to the URL and wait for the page to load

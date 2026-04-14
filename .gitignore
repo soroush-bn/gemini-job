@@ -28,3 +28,4 @@ tracker/
 .DS_Store
 user_profile.json
 frontend/
+linkedin_session.json

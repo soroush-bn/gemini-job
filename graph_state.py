@@ -19,3 +19,5 @@ class AgentState(TypedDict):
     output_dir: Optional[str]
     # The timestamp of the run
     timestamp: Optional[str]
+    # The total cost of the run in CAD
+    total_cost: float
