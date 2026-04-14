@@ -19,11 +19,13 @@ def save_and_compile_latex(latex_content: str, company_name: str, target_dir: st
         with open(tex_file, "w", encoding="utf-8") as f:
             f.write(latex_content)
 
-        # Copy assets (.cls, fonts, etc.) from workspace to target dir
+        # Copy assets (.cls, fonts, images) from workspace to target dir
         if os.path.exists(CV_WORKSPACE):
             for item in os.listdir(CV_WORKSPACE):
-                if item.endswith(".cls") or item.endswith(".png") or item.endswith(".jpg"):
-                    shutil.copy2(os.path.join(CV_WORKSPACE, item), target_dir)
+                # Copy everything that might be needed for compilation (cls, png, jpg, tex files etc.)
+                if any(item.endswith(ext) for ext in [".cls", ".png", ".jpg", ".jpeg", ".tex"]):
+                    if item != output_filename + ".tex": # Don't overwrite the one we just wrote if it was there
+                        shutil.copy2(os.path.join(CV_WORKSPACE, item), target_dir)
 
         # Compile once (sufficient for most CVs)
         result = subprocess.run(

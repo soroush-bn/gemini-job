@@ -297,18 +297,17 @@ def android_tailor_node(state: AgentState):
     
     # Retry loop for malformed function calls or text-only responses
     status = ""
+    current_node_cost = 0.0
     for attempt in range(2):
         try:
             response = chat.send_message(prompt)
             # Log usage
-            cost = 0.0
             if response.usage_metadata:
-                cost = log_token_usage("Android Tailor", {
+                current_node_cost = log_token_usage("Android Tailor", {
                     "prompt_token_count": response.usage_metadata.prompt_token_count,
                     "candidates_token_count": response.usage_metadata.candidates_token_count,
                     "total_token_count": response.usage_metadata.total_token_count
                 }, model_type="flash-lite")
-            state['total_cost'] = state.get('total_cost', 0.0) + cost
             
             status = get_response_text(response)
             
@@ -344,7 +343,7 @@ def android_tailor_node(state: AgentState):
             print(f"[ERROR] Fallback failed: {e}")
 
     pipeline_messenger.send("agent_activity", {"stage": "CV Tailor (Android)", "activity": status})
-    return {"compilation_status": status, "output_dir": state['output_dir'], "total_cost": state.get('total_cost', 0.0), "messages": ["Android Tailor: Done."]}
+    return {"compilation_status": status, "output_dir": state['output_dir'], "total_cost": state.get('total_cost', 0.0) + current_node_cost, "messages": ["Android Tailor: Done."]}
 
 def ml_tailor_node(state: AgentState):
     msg = "--- ML Tailor: Tailoring MLCV ---"
