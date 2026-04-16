@@ -1,5 +1,7 @@
 ![Gemini Job Agent](tenor.gif)
 
+
+## ** USE THE CLI VERSION HERE: [gemini-cli-job](https://github.com/soroush-bn/gemini-cli-job) **
 # Gemini Job Agent
 
 
